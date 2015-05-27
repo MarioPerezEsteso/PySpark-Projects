@@ -2,10 +2,10 @@ import sys
 import os
 
 # Path for spark source folder
-os.environ['SPARK_HOME']="path/to/spark"
+os.environ['SPARK_HOME']="/path/to/spark"
 
 # Append pyspark  to Python Path
-sys.path.append("path/to/spark/python")
+sys.path.append("/path/to/spark/python")
 
 try:
     from pyspark import SparkContext, SparkConf
@@ -17,7 +17,7 @@ except ImportError as e:
     sys.exit(1)
 
 if __name__ == "__main__":
-    conf = SparkConf().setAppName("RandomForest")
+    conf = SparkConf().setAppName("RandomForest_Iris")
     sc = SparkContext(conf = conf)
     print "Loading data..."
     data = MLUtils.loadLibSVMFile(sc, '../../data/iris/iris.scale')
@@ -25,9 +25,8 @@ if __name__ == "__main__":
     # Train a RandomForest model.
     model = RandomForest.trainClassifier(trainingData, numClasses=4,
                                          categoricalFeaturesInfo={},
-                                         numTrees=10, featureSubsetStrategy="auto",
+                                         numTrees=5, featureSubsetStrategy="auto",
                                          impurity='gini', maxDepth=4, maxBins=32)
-
     # Evaluate model on test instances and compute test error
     predictions = model.predict(testData.map(lambda x: x.features))
     labelsAndPredictions = testData.map(lambda lp: lp.label).zip(predictions)
@@ -35,6 +34,15 @@ if __name__ == "__main__":
     print('Test Error = ' + str(testErr))
     print('Learned classification forest model:')
     print(model.toDebugString())
-    # Save and load model
+    # Save model
     model.save(sc, "model")
-    sameModel = RandomForestModel.load(sc, "model")
+
+    # ## Test imported model from file
+    # savedModel = RandomForestModel.load(sc, "model")
+    # # Evaluate model on test instances and compute test error
+    # predictions = savedModel.predict(testData.map(lambda x: x.features))
+    # labelsAndPredictions = testData.map(lambda lp: lp.label).zip(predictions)
+    # testErr = labelsAndPredictions.filter(lambda (v, p): v != p).count() / float(testData.count())
+    # print('Test Error = ' + str(testErr))
+    # print('Learned classification forest model:')
+    # print(savedModel.toDebugString())
